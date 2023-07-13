@@ -1,0 +1,128 @@
+Option Explicit
+Sub Multi_Year_Analysis()
+
+Dim ws As Worksheet
+
+For Each ws In Worksheets
+    ws.Activate
+    
+    Const FIRST_DATA_ROW As Integer = 2
+    Const IN_VOLUME_COL As Integer = 7
+    Const IN_TICKER_COL As Integer = 1
+    Const IN_OPEN_COL As Integer = 3
+    Const IN_CLOSE_COL As Integer = 6
+    Const COLOR_RED As Integer = 3
+    Const COLOR_GREEN As Integer = 4
+        
+    Dim Ticker As String
+    Dim Volume As LongLong
+    
+    Dim input_row As Long
+    Dim Output_Row As Long
+    Dim lastrow As Long
+    Dim G As Long
+        
+    Dim Open_Price As Double
+    Dim Close_Price As Double
+    Dim Yearly_Change As Double
+    Dim Change_Ratio As Double
+    
+    Output_Row = FIRST_DATA_ROW
+    Volume = 0
+    Open_Price = Cells(FIRST_DATA_ROW, 3).Value
+    
+    Dim GPI_TICKER As String
+    Dim GPD_TICKER As String
+    Dim GV_TICKER As String
+    Dim GPI As Double
+    Dim GPD As Double
+    Dim GVV As LongLong
+    
+    GPI = Cells(FIRST_DATA_ROW, 11).Value
+    GPI_TICKER = Cells(FIRST_DATA_ROW, 9).Value
+    GPD = Cells(FIRST_DATA_ROW, 11).Value
+    GPD_TICKER = Cells(FIRST_DATA_ROW, 9).Value
+    GVV = Cells(FIRST_DATA_ROW, 12).Value
+    GV_TICKER = Cells(FIRST_DATA_ROW, 9).Value
+    
+    lastrow = Cells(Rows.Count, IN_TICKER_COL).End(xlUp).Row
+    
+    Range("I1").EntireColumn.Insert
+    Cells(1, 9).Value = "Ticker"
+    Range("J1").EntireColumn.Insert
+    Cells(1, 10).Value = "Yearly Change"
+    Range("K1").EntireColumn.Insert
+    Cells(1, 11).Value = "Percent Change"
+    Range("L1").EntireColumn.Insert
+    Cells(1, 12).Value = "Total Stock Volume"
+    Cells(2, 15).Value = "Greatest % Increase"
+    Cells(3, 15).Value = "Greatest % Decrease"
+    Cells(4, 15).Value = "Greatest Total Volume"
+    Cells(1, 16).Value = "Ticker"
+    Cells(1, 17).Value = "Value"
+        
+    For input_row = FIRST_DATA_ROW To lastrow
+        Ticker = Cells(input_row, IN_TICKER_COL).Value
+        Volume = Volume + Cells(input_row, IN_VOLUME_COL).Value
+        
+        'If last row of current stock
+        If Cells(input_row + 1, IN_TICKER_COL).Value <> Ticker Then
+            'Inputs
+            Close_Price = Cells(input_row, IN_CLOSE_COL).Value
+            'Calculations
+            Yearly_Change = Close_Price - Open_Price
+            Change_Ratio = Yearly_Change / Open_Price
+            'Outputs
+            Range("I" & Output_Row).Value = Ticker
+            Range("J" & Output_Row).Value = Yearly_Change
+            If Range("J" & Output_Row).Value < 0 Then
+                Range("J" & Output_Row).Interior.ColorIndex = COLOR_RED
+                ElseIf Range("J" & Output_Row).Value > 0 Then
+                Range("J" & Output_Row).Interior.ColorIndex = COLOR_GREEN
+            End If
+            Range("K" & Output_Row).Value = FormatPercent(Change_Ratio)
+            Range("L" & Output_Row).Value = Volume
+            'Prepare for next stock
+            Output_Row = Output_Row + 1
+            Open_Price = Cells(input_row + 1, IN_OPEN_COL).Value
+            Volume = 0
+            
+        End If
+    
+    Next input_row
+    
+    'Output greatest
+    For G = FIRST_DATA_ROW To lastrow
+        If Cells(G, 11).Value > GPI Then
+            GPI = Cells(G, 11).Value
+            GPI_TICKER = Cells(G, 9).Value
+            Range("P2").Value = GPI_TICKER
+            Range("Q2").Value = FormatPercent(GPI)
+            
+        End If
+        
+        If Cells(G, 11).Value < GPD Then
+            GPD = Cells(G, 11).Value
+            GPD_TICKER = Cells(G, 9).Value
+            Range("P3").Value = GPD_TICKER
+            Range("Q3").Value = FormatPercent(GPD)
+            
+        End If
+        
+        If Cells(G, 12).Value > GVV Then
+            GVV = Cells(G, 12).Value
+            GV_TICKER = Cells(G, 9).Value
+            Range("P4").Value = GV_TICKER
+            Range("Q4").Value = GVV
+        
+        End If
+        
+    Next G
+    
+    Columns("A:Q").AutoFit
+    
+Next ws
+
+    MsgBox ("done")
+
+End Sub
